@@ -52,21 +52,42 @@ body {
   width: 100%;
 }
 
+/* ── Top Bar ── */
+.top-bar {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 36px 32px 0;
+}
+
 /* ── Greeting ── */
 .greeting {
-  font-size: 17px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 26px;
   font-weight: 300;
   color: var(--text-muted);
-  letter-spacing: -0.02em;
-  margin-bottom: 28px;
+  letter-spacing: -0.03em;
 }
+
+.greeting::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.greeting-morning::before { background: var(--warning); color: var(--warning); }
+.greeting-afternoon::before { background: var(--apple-blue); color: var(--apple-blue); }
+.greeting-evening::before { background: var(--indigo); color: var(--indigo); }
 
 .greeting strong {
   font-weight: 600;
   color: var(--text);
   font-style: normal;
   font-family: inherit;
-  letter-spacing: inherit;
 }
 
 /* ── Header ── */
@@ -631,6 +652,14 @@ body {
 
 /* ── Responsive ── */
 @media (max-width: 640px) {
+  .top-bar {
+    padding: 24px 20px 0;
+  }
+
+  .greeting {
+    font-size: 20px;
+  }
+
   .header {
     padding: 64px 20px 44px;
   }

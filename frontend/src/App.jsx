@@ -7,9 +7,9 @@ import './App.css';
 
 function getGreeting() {
   const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (h < 12) return { text: 'Good morning', period: 'morning' };
+  if (h < 17) return { text: 'Good afternoon', period: 'afternoon' };
+  return { text: 'Good evening', period: 'evening' };
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -21,6 +21,7 @@ export default function App() {
   const [searchedZip, setSearchedZip] = useState('');
   const [filterNoWebsite, setFilterNoWebsite] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const greeting = getGreeting();
 
   const handleSearch = async (zip) => {
     setLoading(true);
@@ -31,7 +32,8 @@ export default function App() {
     setCurrentPage(1);
 
     try {
-      const res = await fetch('/api/search', {
+      const base = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${base}/api/search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ zipCode: zip }),
@@ -73,7 +75,9 @@ export default function App() {
   return (
     <div className="app">
       <div className="top-bar">
-        <p className="greeting">{getGreeting()}, <strong>Jake</strong>.</p>
+        <p className={`greeting greeting-${greeting.period}`}>
+          {greeting.text}, <strong>Jake</strong>.
+        </p>
       </div>
 
       <header className="header">
