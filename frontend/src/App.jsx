@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import LoginScreen from './components/LoginScreen';
 import SearchBar from './components/SearchBar';
 import StatsBar from './components/StatsBar';
 import ResultCard from './components/ResultCard';
@@ -15,6 +16,8 @@ function getGreeting() {
 const ITEMS_PER_PAGE = 10;
 
 export default function App() {
+  const [authState, setAuthState] = useState('checking'); // 'checking' | 'in' | 'out'
+  const [userName, setUserName] = useState(null);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
@@ -22,6 +25,25 @@ export default function App() {
   const [filterNoWebsite, setFilterNoWebsite] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const greeting = getGreeting();
+
+  useEffect(() => {
+    fetch('/api/session', { credentials: 'same-origin' })
+      .then((res) => res.json())
+      .then((data) => {
+        setAuthState(data.authenticated ? 'in' : 'out');
+        setUserName(data.name || null);
+      })
+      .catch(() => setAuthState('out'));
+  }, []);
+
+  const handleLogout = async () => {
+    setAuthState('out');
+    try {
+      await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
+    } catch {
+      // Cookie may already be gone client-side reload; nothing actionable here.
+    }
+  };
 
   const handleSearch = async (zip) => {
     setLoading(true);
@@ -35,9 +57,16 @@ export default function App() {
       const base = import.meta.env.VITE_API_URL || '';
       const res = await fetch(`${base}/api/search`, {
         method: 'POST',
+        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ zipCode: zip }),
       });
+
+      if (res.status === 401) {
+        setAuthState('out');
+        return;
+      }
+
       const data = await res.json();
 
       if (!res.ok) {
@@ -72,12 +101,36 @@ export default function App() {
     currentPage * ITEMS_PER_PAGE
   );
 
+  if (authState === 'checking') {
+    return <div className="app" />;
+  }
+
+  if (authState === 'out') {
+    return (
+      <LoginScreen
+        onSuccess={(name) => {
+          setUserName(name);
+          setAuthState('in');
+        }}
+      />
+    );
+  }
+
   return (
     <div className="app">
       <div className="top-bar">
         <p className={`greeting greeting-${greeting.period}`}>
-          {greeting.text}, <strong>Jake</strong>.
+          {greeting.text}
+          {userName && (
+            <>
+              , <strong>{userName}</strong>
+            </>
+          )}
+          .
         </p>
+        <button className="signout-btn" onClick={handleLogout}>
+          Sign out
+        </button>
       </div>
 
       <header className="header">

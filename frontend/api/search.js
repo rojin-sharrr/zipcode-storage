@@ -1,10 +1,18 @@
 // Vercel serverless function — replaces the old Express backend.
 // Runs server-side only; GOOGLE_API_KEY here is never sent to the browser.
 
+import { isAuthenticated } from './_lib/auth.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Gate the actual work behind the session cookie — this is what makes the
+  // login screen a real barrier rather than something bypassable with curl.
+  if (!isAuthenticated(req)) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const { zipCode } = req.body || {};
